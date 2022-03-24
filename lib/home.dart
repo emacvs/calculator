@@ -27,7 +27,7 @@ class ButtonOperand {
 }
 
 class ButtonNumber {
-  int value;
+  String value;
   ButtonNumber({required this.value});
 }
 
@@ -43,7 +43,7 @@ class _HomeState extends State<Home> {
     return n.toString().replaceAll(regex, '');
   }
 
-  void _setOperator(ButtonOperand operator) {
+  void _setOperator(String operator) {
     setState(() {
       if (_buffer != "") {
         switch (_operator) {
@@ -65,22 +65,26 @@ class _HomeState extends State<Home> {
         }
       }
 
-      if (operator.operator == "=") {
-        _operator = "";
-        _display = _removeTrailingZero(_total) + " " + _operator;
-        _buffer = "";
-        return;
+      if (operator == "=") {
+        if (_operator == "") {
+          _total = 0;
+        } else {
+          _operator = "";
+        }
+      } else {
+        _operator = operator;
       }
 
-      _operator = operator.operator;
       _display = _removeTrailingZero(_total) + " " + _operator;
       _buffer = "";
     });
   }
 
-  void _numberPressed(ButtonNumber operand) {
+  void _numberPressed(String operand) {
     setState(() {
-      _buffer += operand.value.toString();
+      if ((operand == "." && _buffer != "") || operand != ".") {
+        _buffer += operand;
+      }
       _display = _buffer;
     });
   }
@@ -115,9 +119,9 @@ class _HomeState extends State<Home> {
               onPressed: (dynamic val) {
                 log(val.toString());
                 if (val is ButtonOperand) {
-                  _setOperator(val);
+                  _setOperator(val.operator);
                 } else if (val is ButtonNumber) {
-                  _numberPressed(val);
+                  _numberPressed(val.value);
                 }
               },
               items: [
@@ -125,15 +129,15 @@ class _HomeState extends State<Home> {
                   GridButtonItem(
                       borderRadius: radius,
                       title: "7",
-                      value: ButtonNumber(value: 7)),
+                      value: ButtonNumber(value: "7")),
                   GridButtonItem(
                       borderRadius: radius,
                       title: "8",
-                      value: ButtonNumber(value: 8)),
+                      value: ButtonNumber(value: "8")),
                   GridButtonItem(
                       borderRadius: radius,
                       title: "9",
-                      value: ButtonNumber(value: 9)),
+                      value: ButtonNumber(value: "9")),
                   GridButtonItem(
                     borderRadius: radius,
                     title: "×",
@@ -145,15 +149,15 @@ class _HomeState extends State<Home> {
                   GridButtonItem(
                       borderRadius: radius,
                       title: "4",
-                      value: ButtonNumber(value: 4)),
+                      value: ButtonNumber(value: "4")),
                   GridButtonItem(
                       borderRadius: radius,
                       title: "5",
-                      value: ButtonNumber(value: 5)),
+                      value: ButtonNumber(value: "5")),
                   GridButtonItem(
                       borderRadius: radius,
                       title: "6",
-                      value: ButtonNumber(value: 6)),
+                      value: ButtonNumber(value: "6")),
                   GridButtonItem(
                       borderRadius: radius,
                       title: "-",
@@ -164,15 +168,15 @@ class _HomeState extends State<Home> {
                   GridButtonItem(
                       borderRadius: radius,
                       title: "1",
-                      value: ButtonNumber(value: 1)),
+                      value: ButtonNumber(value: "1")),
                   GridButtonItem(
                       borderRadius: radius,
                       title: "2",
-                      value: ButtonNumber(value: 2)),
+                      value: ButtonNumber(value: "2")),
                   GridButtonItem(
                       borderRadius: radius,
                       title: "3",
-                      value: ButtonNumber(value: 3)),
+                      value: ButtonNumber(value: "3")),
                   GridButtonItem(
                       borderRadius: radius,
                       title: "+",
@@ -183,8 +187,11 @@ class _HomeState extends State<Home> {
                   GridButtonItem(
                       borderRadius: radius,
                       title: "0",
-                      flex: 2,
-                      value: ButtonNumber(value: 0)),
+                      value: ButtonNumber(value: "0")),
+                  GridButtonItem(
+                      borderRadius: radius,
+                      title: ".",
+                      value: ButtonNumber(value: ".")),
                   GridButtonItem(
                       borderRadius: radius,
                       title: "=",
