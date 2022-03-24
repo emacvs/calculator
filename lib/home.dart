@@ -27,29 +27,61 @@ class ButtonOperand {
 }
 
 class ButtonNumber {
-  double value;
+  int value;
   ButtonNumber({required this.value});
 }
 
 class _HomeState extends State<Home> {
   static const double radius = 10;
   double _total = 0;
-  String _display = "0";
-  String _operator = "+";
+  String _display = "";
+  String _buffer = "";
+  String _operator = "";
+
+  String _removeTrailingZero(double n) {
+    RegExp regex = RegExp(r'([.]*0)(?!.*\d)');
+    return n.toString().replaceAll(regex, '');
+  }
 
   void _setOperator(ButtonOperand operator) {
     setState(() {
+      if (_buffer != "") {
+        switch (_operator) {
+          case "":
+            _total = double.parse(_buffer);
+            break;
+          case "+":
+            _total += double.parse(_buffer);
+            break;
+          case "-":
+            _total -= double.parse(_buffer);
+            break;
+          case "x":
+            _total *= double.parse(_buffer);
+            break;
+          case ":":
+            _total /= double.parse(_buffer);
+            break;
+        }
+      }
+
+      if (operator.operator == "=") {
+        _operator = "";
+        _display = _removeTrailingZero(_total) + " " + _operator;
+        _buffer = "";
+        return;
+      }
+
       _operator = operator.operator;
+      _display = _removeTrailingZero(_total) + " " + _operator;
+      _buffer = "";
     });
   }
 
-  void _operation(ButtonNumber operand) {
+  void _numberPressed(ButtonNumber operand) {
     setState(() {
-      _display = operand.value.toString();
-      switch (_operator) {
-        case "+":
-          _total += operand.value;
-      }
+      _buffer += operand.value.toString();
+      _display = _buffer;
     });
   }
 
@@ -73,7 +105,7 @@ class _HomeState extends State<Home> {
             height: 100,
             child: Center(
               child: Text(
-                _display.toString() + " " + _operator,
+                _display.toString(),
                 style: TextStyle(fontSize: 40),
               ),
             ),
@@ -85,7 +117,7 @@ class _HomeState extends State<Home> {
                 if (val is ButtonOperand) {
                   _setOperator(val);
                 } else if (val is ButtonNumber) {
-                  _operation(val);
+                  _numberPressed(val);
                 }
               },
               items: [
@@ -105,7 +137,7 @@ class _HomeState extends State<Home> {
                   GridButtonItem(
                     borderRadius: radius,
                     title: "×",
-                    value: ButtonOperand(operator: "*"),
+                    value: ButtonOperand(operator: "x"),
                     color: Colors.grey[300],
                   )
                 ],
@@ -151,12 +183,17 @@ class _HomeState extends State<Home> {
                   GridButtonItem(
                       borderRadius: radius,
                       title: "0",
-                      flex: 3,
+                      flex: 2,
                       value: ButtonNumber(value: 0)),
                   GridButtonItem(
                       borderRadius: radius,
                       title: "=",
-                      value: ButtonOperand(operator: "="),
+                      color: Colors.green,
+                      value: ButtonOperand(operator: "=")),
+                  GridButtonItem(
+                      borderRadius: radius,
+                      title: ":",
+                      value: ButtonOperand(operator: ":"),
                       color: Colors.grey[300]),
                 ],
               ],
