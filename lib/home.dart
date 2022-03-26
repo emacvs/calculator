@@ -21,18 +21,51 @@ class Home extends StatefulWidget {
   State<Home> createState() => _HomeState();
 }
 
-class ButtonOperand {
+class ButtonOperator {
   String operator;
-  ButtonOperand({required this.operator});
+  ButtonOperator(this.operator);
 }
 
 class ButtonNumber {
   String value;
-  ButtonNumber({required this.value});
+  ButtonNumber(this.value);
+}
+
+class GridButtonItemCustom extends GridButtonItem {
+  static getCorrectValue(value, isOperator, isNumber, other) {
+    if (value is ButtonOperator) {
+      return isOperator;
+    } else if (value is ButtonNumber) {
+      return isNumber;
+    } else {
+      return other;
+    }
+  }
+
+  GridButtonItemCustom(dynamic value)
+      : super(
+          title: value is ButtonOperator
+              ? value.operator
+              : value is ButtonNumber
+                  ? value.value
+                  : "",
+          value: value,
+          borderRadius: 1000,
+          textStyle: TextStyle(
+              color: Colors.black, fontSize: 37, package: "", fontFamily: ""),
+          color: getCorrectValue(value, Colors.amber, Colors.grey, null),
+        );
+}
+
+class GridButtonNumber extends GridButtonItemCustom {
+  GridButtonNumber(String number) : super(ButtonNumber(number));
+}
+
+class GridButtonOperator extends GridButtonItemCustom {
+  GridButtonOperator(String operator) : super(ButtonOperator(operator));
 }
 
 class _HomeState extends State<Home> {
-  static const double radius = 10;
   double _total = 0;
   String _display = "";
   String _buffer = "";
@@ -98,112 +131,68 @@ class _HomeState extends State<Home> {
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
+        backgroundColor: Colors.black,
       ),
       body: Column(
         children: [
-          SizedBox(
-            height: 100,
-            child: Center(
-              child: Text(
-                _display.toString(),
-                style: TextStyle(fontSize: 40),
-              ),
+          Expanded(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Text(
+                  _display.toString(),
+                  style: TextStyle(fontSize: 80, color: Colors.white),
+                ),
+              ],
             ),
           ),
-          Expanded(
-            child: GridButton(
-              onPressed: (dynamic val) {
-                log(val.toString());
-                if (val is ButtonOperand) {
-                  _setOperator(val.operator);
-                } else if (val is ButtonNumber) {
-                  _numberPressed(val.value);
-                }
-              },
-              items: [
-                [
-                  GridButtonItem(
-                      borderRadius: radius,
-                      title: "7",
-                      value: ButtonNumber(value: "7")),
-                  GridButtonItem(
-                      borderRadius: radius,
-                      title: "8",
-                      value: ButtonNumber(value: "8")),
-                  GridButtonItem(
-                      borderRadius: radius,
-                      title: "9",
-                      value: ButtonNumber(value: "9")),
-                  GridButtonItem(
-                    borderRadius: radius,
-                    title: "×",
-                    value: ButtonOperand(operator: "x"),
-                    color: Colors.grey[300],
-                  )
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 30),
+            child: SizedBox(
+              height: 400,
+              child: GridButton(
+                hideSurroundingBorder: false,
+                borderColor: Colors.black,
+                borderWidth: 10,
+                onPressed: (dynamic button) {
+                  if (button is ButtonOperator) {
+                    _setOperator(button.operator);
+                  } else if (button is ButtonNumber) {
+                    _numberPressed(button.value);
+                  }
+                },
+                items: [
+                  [
+                    GridButtonNumber("7"),
+                    GridButtonNumber("8"),
+                    GridButtonNumber("9"),
+                    GridButtonOperator("x"),
+                  ],
+                  [
+                    GridButtonNumber("4"),
+                    GridButtonNumber("5"),
+                    GridButtonNumber("6"),
+                    GridButtonOperator("-"),
+                  ],
+                  [
+                    GridButtonNumber("1"),
+                    GridButtonNumber("2"),
+                    GridButtonNumber("3"),
+                    GridButtonOperator("+"),
+                  ],
+                  [
+                    GridButtonNumber("0"),
+                    GridButtonNumber("."),
+                    GridButtonOperator("="),
+                    GridButtonOperator(":"),
+                  ],
                 ],
-                [
-                  GridButtonItem(
-                      borderRadius: radius,
-                      title: "4",
-                      value: ButtonNumber(value: "4")),
-                  GridButtonItem(
-                      borderRadius: radius,
-                      title: "5",
-                      value: ButtonNumber(value: "5")),
-                  GridButtonItem(
-                      borderRadius: radius,
-                      title: "6",
-                      value: ButtonNumber(value: "6")),
-                  GridButtonItem(
-                      borderRadius: radius,
-                      title: "-",
-                      value: ButtonOperand(operator: "-"),
-                      color: Colors.grey[300]),
-                ],
-                [
-                  GridButtonItem(
-                      borderRadius: radius,
-                      title: "1",
-                      value: ButtonNumber(value: "1")),
-                  GridButtonItem(
-                      borderRadius: radius,
-                      title: "2",
-                      value: ButtonNumber(value: "2")),
-                  GridButtonItem(
-                      borderRadius: radius,
-                      title: "3",
-                      value: ButtonNumber(value: "3")),
-                  GridButtonItem(
-                      borderRadius: radius,
-                      title: "+",
-                      value: ButtonOperand(operator: "+"),
-                      color: Colors.grey[300]),
-                ],
-                [
-                  GridButtonItem(
-                      borderRadius: radius,
-                      title: "0",
-                      value: ButtonNumber(value: "0")),
-                  GridButtonItem(
-                      borderRadius: radius,
-                      title: ".",
-                      value: ButtonNumber(value: ".")),
-                  GridButtonItem(
-                      borderRadius: radius,
-                      title: "=",
-                      color: Colors.green,
-                      value: ButtonOperand(operator: "=")),
-                  GridButtonItem(
-                      borderRadius: radius,
-                      title: ":",
-                      value: ButtonOperand(operator: ":"),
-                      color: Colors.grey[300]),
-                ],
-              ],
+              ),
             ),
           )
         ],
