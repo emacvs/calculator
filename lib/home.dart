@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_grid_button/flutter_grid_button.dart';
 
@@ -32,6 +30,10 @@ class ButtonNumber {
 }
 
 class GridButtonItemCustom extends GridButtonItem {
+  static const TextStyle textNumber =
+      TextStyle(color: Colors.black, fontSize: 37);
+  static const TextStyle textOperator =
+      TextStyle(color: Colors.white, fontSize: 37);
   static getCorrectValue(value, isOperator, isNumber, other) {
     if (value is ButtonOperator) {
       return isOperator;
@@ -42,7 +44,7 @@ class GridButtonItemCustom extends GridButtonItem {
     }
   }
 
-  GridButtonItemCustom(dynamic value)
+  GridButtonItemCustom(dynamic value, {int flex = 1})
       : super(
           title: value is ButtonOperator
               ? value.operator
@@ -51,18 +53,20 @@ class GridButtonItemCustom extends GridButtonItem {
                   : "",
           value: value,
           borderRadius: 1000,
-          textStyle: TextStyle(
-              color: Colors.black, fontSize: 37, package: "", fontFamily: ""),
-          color: getCorrectValue(value, Colors.amber, Colors.grey, null),
+          flex: flex,
+          textStyle: getCorrectValue(value, textNumber, textOperator, null),
+          color: getCorrectValue(value, Colors.amber, Colors.grey[600], null),
         );
 }
 
 class GridButtonNumber extends GridButtonItemCustom {
-  GridButtonNumber(String number) : super(ButtonNumber(number));
+  GridButtonNumber(String number, [int flex = 1])
+      : super(ButtonNumber(number), flex: flex);
 }
 
 class GridButtonOperator extends GridButtonItemCustom {
-  GridButtonOperator(String operator) : super(ButtonOperator(operator));
+  GridButtonOperator(String operator, [int flex = 1])
+      : super(ButtonOperator(operator), flex: flex);
 }
 
 class _HomeState extends State<Home> {
@@ -78,37 +82,60 @@ class _HomeState extends State<Home> {
 
   void _setOperator(String operator) {
     setState(() {
-      if (_buffer != "") {
+      if (_buffer.isNotEmpty) {
+        double sNumber = double.parse(_buffer);
+
+        if (operator == "%") {
+          sNumber = (sNumber / 100 * _total);
+          _display = _removeTrailingZero(sNumber);
+          _buffer = _removeTrailingZero(sNumber);
+          return;
+        }
+
         switch (_operator) {
           case "":
-            _total = double.parse(_buffer);
+            _total = sNumber;
             break;
           case "+":
-            _total += double.parse(_buffer);
+            _total += sNumber;
             break;
           case "-":
-            _total -= double.parse(_buffer);
+            _total -= sNumber;
             break;
           case "x":
-            _total *= double.parse(_buffer);
+            _total *= sNumber;
             break;
           case ":":
-            _total /= double.parse(_buffer);
+            _total /= sNumber;
             break;
         }
       }
 
-      if (operator == "=") {
-        if (_operator == "") {
+      switch (operator) {
+        case "AC":
           _total = 0;
-        } else {
           _operator = "";
-        }
-      } else {
-        _operator = operator;
+          break;
+        case "C":
+          String t = _removeTrailingZero(_total);
+          if (t.length <= 1) {
+            _total = 0;
+          } else {
+            _total = double.parse(t.substring(0, t.length - 1));
+          }
+          _operator = "";
+          break;
+        case "=":
+          _operator = "";
+          break;
+
+        default:
+          _operator = operator;
+          break;
       }
 
-      _display = _removeTrailingZero(_total) + " " + _operator;
+      _display = _removeTrailingZero(_total) +
+          (_operator != "" ? " " + _operator : "");
       _buffer = "";
     });
   }
@@ -146,7 +173,7 @@ class _HomeState extends State<Home> {
               children: [
                 Text(
                   _display.toString(),
-                  style: TextStyle(fontSize: 80, color: Colors.white),
+                  style: const TextStyle(fontSize: 80, color: Colors.white),
                 ),
               ],
             ),
@@ -154,7 +181,7 @@ class _HomeState extends State<Home> {
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 30),
             child: SizedBox(
-              height: 400,
+              height: 500,
               child: GridButton(
                 hideSurroundingBorder: false,
                 borderColor: Colors.black,
@@ -167,6 +194,12 @@ class _HomeState extends State<Home> {
                   }
                 },
                 items: [
+                  [
+                    GridButtonOperator("AC"),
+                    GridButtonOperator("C"),
+                    GridButtonOperator("%"),
+                    GridButtonOperator(":"),
+                  ],
                   [
                     GridButtonNumber("7"),
                     GridButtonNumber("8"),
@@ -186,10 +219,9 @@ class _HomeState extends State<Home> {
                     GridButtonOperator("+"),
                   ],
                   [
-                    GridButtonNumber("0"),
+                    GridButtonNumber("0", 2),
                     GridButtonNumber("."),
                     GridButtonOperator("="),
-                    GridButtonOperator(":"),
                   ],
                 ],
               ),
